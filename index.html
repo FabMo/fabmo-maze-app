@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+
+<! jward 2016 >
+
+<html lang="en"> 
+<head>
+<title>GRID</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" charset="utf-8"/>
+<script src="js/jquery-1.11.2.min.js"></script>
+<script src="js/jquery.mousewheel.min.js"></script>
+<script src="js/libs/fabmo.js"></script>
+    <script type="text/javascript">
+        var fabmo = new FabMoDashboard();
+    </script>
+
+<style>
+
+body{
+	background:#eee;
+
+}
+
+#myCanvas{
+   cursor: crosshair;
+}
+
+input{
+	position: absolute;
+	width: 72px;
+	height: 24px;
+}
+
+#input_submit{
+	right: 30px;
+	bottom: 30px;
+	width:100px;
+	height:100px;
+}
+
+#input_depth{
+	display: none;
+	position: absolute;
+	right: 30px;
+	bottom: 150px;
+	width: 92px;
+}
+
+depth{
+	display: none;
+	position: absolute;
+	right: 60px;
+	bottom: 184px;
+	font-family: arial;
+	font-size: 16px;
+	color: #333;
+}
+
+#input_tool{
+	display: none;
+	position: absolute;
+	right: 30px;
+	bottom: 200px;
+	width: 92px;
+}
+
+#input_radius{
+	display: none;
+}
+
+#undo{
+	right: 10px;
+	top: 60px;
+	width:175px;
+	height:37px;
+}
+
+#type{
+	display: none;
+	position: absolute;
+	right: 10px;
+	top:   105px;
+	width: 175px;
+	height: 37px;
+}
+
+#x-right{
+	display: none;
+	position: absolute;
+	right: 30px;
+	top:   50%;
+	width: 83px;
+	height: 25px;
+}
+
+#x-left{
+	display: none;
+	position: absolute;
+	left: 30px;
+	top:   50%;
+	width: 83px;
+	height: 25px;
+}
+
+#y-top{
+	display: none;
+	position: absolute;
+	right: 13%;
+	top:   10px;
+	width: 83px;
+	height: 25px;
+}
+
+#y-bot{
+	display: none;
+	position: absolute;
+	right: 13%;
+	bottom: 20px;
+	width: 83px;
+	height: 25px;
+}
+
+#help{
+	display: none;
+	position: absolute;
+	left: 10px;
+	top: 10px;
+	width: 37px;
+	height: 37px;
+}
+
+
+#board{
+	display: none;
+	position: absolute;
+	left: 10px;
+	top: 60px;
+	width: 120px;
+	height: 37px;
+}
+
+#help-div{
+	display:none;
+	position: absolute;
+	left: 8px;
+	top: 62px;
+	width: 190px;
+	height: 420px;
+	background: rgba(76, 175, 80, 0.5);
+	padding: 20px;
+	border-radius: 25px;
+	color: #fff;
+	font-size: 15px;
+	font-family: arial;
+}
+
+.alignleft {
+	float: left;
+}
+.alignright {
+	float: right;
+}
+.aligncenter {
+ 	text-align: center; }
+}
+
+</style>
+</head>
+
+<body onload="makeFrame(radius); draw(); makeGrid();">
+
+<select id="type" autocomplete="on">
+  <option value="part" selected disabled>&#43;</option>
+</select>
+
+<select id="board" autocomplete="on">
+  <option value="maze" selected>MAZE</option>
+
+</select>
+
+
+<input id="help" type="submit" value="?" onclick="help()"/>
+
+<input id="input_tool" type="number" value="0.79" autocomplete="on" step="0.01"/>
+
+<input id="input_depth" type="number" value="1.7" autocomplete="on" step="0.1" min="0"/>
+
+<input id="input_submit" type="submit" value="SUBMIT&#x00A;JOB" onclick="make()"/>
+
+<input id="undo" type="submit" value="CLEAR" onclick="Clear()"/>
+
+<canvas id="myCanvas"></canvas>
+
+<div id="help-div">
+
+</div>
+   
+<input id="x-right" type="number" value="0" autocomplete="off" step="1" min="0"/>
+<input id="x-left" type="number" value="0" autocomplete="off" step="1" min="0"/>
+
+<input id="y-top" type="number" value="0" autocomplete="off" step="1" min="0"/>
+<input id="y-bot" type="number" value="0" autocomplete="off" step="1" min="0"/>
+
+<input id="input_radius" type="number" value="2" autocomplete="off" step="0.1" min="0"/>   
+
+<script>
+
+//TODO
+//
+//cleanup
+
+var g = ""
+var frame1 = []
+var path1 = []
+var verts = 100
+var xmin = -76.2
+var ymin = -76.2
+var xmax = 76.2  
+var ymax = 76.2 
+var radius = 0
+var tool = 0
+
+var mouseX=-25.3985
+var mouseY= 24.15
+var endX
+var endY
+
+var xpos = 0
+var gridPath = [[]]
+var points = []
+var I = []
+
+var lines = []
+
+var gridSpacing = 12.7 //9.525
+
+var o = -5.7135
+var c
+var ctx
+var sf = 1
+var r = 1
+
+var myConfig = {}
+
+var grid = []
+
+var pocket = []
+var outlines = []
+var pts = []
+
+
+var paths = []
+var on_grid = false
+
+var px = 0
+var py = 0
+
+var origin ={X:0,Y:0}
+var arcs = []
+
+var xo = 0
+var yo = 0
+
+var yoffsetTop = 0
+var yoffsetBot = 0
+
+var panY = 0
+var panX = 0
+var pan = false
+
+var zoom = 0
+var click = 0
+var dist = 0
+var start = 0
+
+var temp = []
+var temp2
+var A = []
+
+$("#myCanvas").on('mousewheel',function(e){
+	zoom = parseFloat((zoom+(e.deltaY)).toFixed(3))
+	draw()
+	e.preventDefault()
+})
+
+$("#myCanvas").on("touchmove", function(e){
+
+	if (e.originalEvent.touches.length==1) {
+		if(click==0){	
+			x=((e.originalEvent.touches[0].clientX-(10)-(xo)-(ctx.canvas.width/2))/sf)-panX
+			y=((e.originalEvent.touches[0].clientY-(10)-(yo)-(ctx.canvas.height/2))/sf)-panY
+			px=x
+			py=y
+			click=1
+		}
+		else{
+			x=((e.originalEvent.touches[0].clientX-(10)-(xo)-(ctx.canvas.width/2))/sf)
+			y=((e.originalEvent.touches[0].clientY-(10)-(yo)-(ctx.canvas.height/2))/sf)
+			panX=(x-px)
+			panY=(y-py)
+			draw()
+		}
+      
+	}
+	else if (e.originalEvent.touches.length==2) {
+		dist = Math.sqrt((e.originalEvent.touches[0].clientX-e.originalEvent.touches[1].clientX) * (e.originalEvent.touches[0].clientX-e.originalEvent.touches[1].clientX) + (e.originalEvent.touches[0].clientY-e.originalEvent.touches[1].clientY) * (e.originalEvent.touches[0].clientY-e.originalEvent.touches[1].clientY))
+
+		if((parseFloat(start/dist))<1){
+			zoom+=0.25
+		}
+		else{
+			zoom+=-0.25
+		}
+		draw()
+		
+	}
+
+})
+
+$("#myCanvas").on("touchstart", function(e){
+	if (e.originalEvent.touches.length==2) {
+		start = Math.sqrt((e.originalEvent.touches[0].clientX-e.originalEvent.touches[1].clientX) * (e.originalEvent.touches[0].clientX-e.originalEvent.touches[1].clientX) + (e.originalEvent.touches[0].clientY-e.originalEvent.touches[1].clientY) * (e.originalEvent.touches[0].clientY-e.originalEvent.touches[1].clientY))
+	}
+});
+
+
+$("#myCanvas").on("touchend", function(e){
+	click = 0
+
+});
+
+function draw(){
+
+if((pan==true)&&(click==0)){
+	document.getElementById('myCanvas').style.cursor = 'grab'
+	document.getElementById('myCanvas').style.cursor = '-webkit-grab'
+}
+else if((pan==true)&&(click==1)){
+	document.getElementById('myCanvas').style.cursor = 'move'
+}
+else{
+	document.getElementById('myCanvas').style.cursor = 'crosshair'
+}
+
+
+
+c = document.getElementById("myCanvas")
+ctx = c.getContext("2d")
+
+ctx.canvas.height = $(window).innerHeight()-30
+ctx.canvas.width = $(window).innerWidth()-30
+
+sf = ((ctx.canvas.height-(110-(yoffsetTop/sf)-(yoffsetBot/sf)))/(ymax+(Math.abs(ymin)))+zoom)
+
+if(sf<2){
+	sf = 2
+	zoom = 2-(ctx.canvas.height-(110-(yoffsetTop/sf)-(yoffsetBot/sf)))/(ymax+(Math.abs(ymin)))
+}
+
+yo=((parseFloat(document.getElementById("y-top").value)*1.27*sf)-(parseFloat(document.getElementById("y-bot").value)*1.27*sf))
+
+ctx.translate(panX*sf,yo+panY*sf)
+
+ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height)
+ctx.lineJoin="round"
+ctx.lineCap="round"
+
+ctx.fillStyle="#8c8cff"
+ctx.strokeStyle="#000"
+ctx.lineWidth="1"
+
+
+ctx.fillStyle="rgba(76, 175, 200, 0.5)"
+ctx.beginPath()
+	for(i=0;i<frame1.length;i++){
+		ctx.lineTo((frame1[i].X*sf)+ctx.canvas.width/2,(frame1[i].Y*sf)+ctx.canvas.height/2)
+	}
+ctx.fill()
+
+ctx.strokeStyle="#fff"
+ctx.lineWidth=0.7
+for(i=0;i<grid.length;i++){
+	ctx.beginPath()
+	for(j=0;j<grid[i].length;j++){
+		ctx.lineTo((ctx.canvas.width/2)+(grid[i][j].X*sf),(ctx.canvas.height/2)+(grid[i][j].Y*sf))
+	}
+	ctx.stroke()
+}
+
+
+
+ctx.stroke()
+
+ctx.strokeStyle="#666"
+ctx.lineWidth=(0.3*sf)
+for(i=0;i<gridPath.length;i++){
+	ctx.beginPath()
+	for(j=0;j<gridPath[i].length;j++){
+	}
+	ctx.stroke()
+}
+
+if(gridPath[gridPath.length-1].length==1){
+
+ctx.beginPath()
+
+ctx.moveTo((ctx.canvas.width/2+(gridPath[gridPath.length-1][0].X*sf)),(ctx.canvas.height/2+(gridPath[gridPath.length-1][0].Y*sf)))
+	if( (Math.abs(mouseX-gridPath[gridPath.length-1][0].X))>(Math.abs(mouseY-gridPath[gridPath.length-1][0].Y)) ){
+		ctx.lineTo( (ctx.canvas.width/2+mouseX*sf),(ctx.canvas.height/2+(gridPath[gridPath.length-1][0].Y*sf)) )
+	}
+	else{
+		ctx.lineTo( (ctx.canvas.width/2+(gridPath[gridPath.length-1][0].X*sf)), (ctx.canvas.height/2+mouseY*sf) )
+	}		
+ctx.stroke()
+}
+
+
+
+ctx.lineWidth=sf*3.175
+ctx.strokeStyle="#5500dd"
+
+for(i=0;i<points.length;i++){
+	ctx.beginPath()
+	for(j=0;j<points[i].length;j++){
+		ctx.lineTo((ctx.canvas.width/2+(points[i][j].X*sf)),(ctx.canvas.height/2+(points[i][j].Y*sf)))				
+	}
+ctx.stroke()
+}
+
+
+ctx.lineWidth=0.8*sf
+
+
+ctx.fillStyle="#999"
+ctx.strokeStyle="#666"
+
+ctx.beginPath()
+
+if((on_grid==true)&&(pan==false)){
+	
+
+ctx.beginPath()
+
+	ctx.fillStyle="#666"
+
+	ctx.arc(	(ctx.canvas.width/2+(mouseX)*sf),(ctx.canvas.height/2+(mouseY)*sf),2.5*sf,0,(Math.PI*2) )
+	
+	if(gridPath[gridPath.length-1].length==0){
+		ctx.fillStyle="#fff000"
+	}
+	else{
+		ctx.fillStyle="#ff00ff"
+	}
+
+	ctx.stroke()
+
+	ctx.lineWidth=sf
+
+	ctx.fill()
+
+}
+
+
+ctx.strokeStyle="#8800ff"
+
+ctx.strokeStyle="#fff"
+
+var size_font = (14)
+ctx.font = (size_font + "px Arial")
+
+
+size_font = (17)
+ctx.font = (size_font + "px Arial")
+ctx.fillStyle="#777"
+ctx.translate( (ctx.canvas.width/2)-xo,ctx.canvas.height/2)
+
+if((document.getElementById("board").value)=="maze"){
+	droX=((((parseFloat(mouseX)+76.2+(parseInt(document.getElementById('x-left').value)*2.54))/25.4)).toFixed(3))
+	droY=(Math.abs((parseFloat(mouseY)-76.2-(parseInt(document.getElementById('y-bot').value)*2.54))/25.4).toFixed(3))
+}
+
+ctx.fillText("x: "+droX,ctx.canvas.width/2-(103)-(panX*sf),-ctx.canvas.height/2+(15)-yo-(panY*sf))
+ctx.fillText("y: "+droY,ctx.canvas.width/2-(103)-(panX*sf),-ctx.canvas.height/2+(40)-yo-(panY*sf))
+
+var size_font = (12)
+ctx.font = (size_font + "px Arial")
+ctx.fillText("inch",ctx.canvas.width/2-(30)-(panX*sf),-ctx.canvas.height/2+(40)-yo-(panY*sf))
+
+//
+size_font = (1.5*sf)
+ctx.font = (size_font + "px Arial")
+
+ctx.translate(((-11.45+o)*sf)+(1.5*sf)+xo,-27*sf)
+
+ctx.rotate(-Math.PI/2);
+
+yoffsetTop = (parseFloat(document.getElementById("y-top").value)*2.54*sf)
+yoffsetBot = (parseFloat(document.getElementById("y-bot").value)*2.54*sf)
+
+}
+
+$("#myCanvas").on('click', function(e) {
+
+	x = (((e.clientX-(10)-(xo)-(ctx.canvas.width/2))/sf)-panX)
+	y = (((e.clientY-(10)-(yo)-(ctx.canvas.height/2))/sf)-panY)
+
+		if(pan==false){
+
+		for(i=0;i<pts.length;i++){
+
+			if(((Math.abs(x-pts[i].X))<=(gridSpacing/2)) && ((Math.abs(y-pts[i].Y))<=(gridSpacing/2))){
+
+				endX=pts[i].X
+				endY=pts[i].Y
+
+				if((document.getElementById("type").value=="part")){
+
+					if(gridPath[gridPath.length-1].length==0){
+						gridPath[gridPath.length-1].push({X:endX,Y:endY,N:"S"})
+						points.push({X:endX,Y:endY,N:"S"})
+						lines.push([])
+						lines[lines.length-1].push({X:endX,Y:endY,T:"A"})
+					}
+					else{
+						if( (Math.abs(endX-gridPath[gridPath.length-1][0].X))>(Math.abs(endY-gridPath[gridPath.length-1][0].Y)) ){
+							gridPath[gridPath.length-1].push({X:endX,Y:gridPath[gridPath.length-1][0].Y})
+								for(j=0;j<(Math.round(Math.abs(endX-gridPath[gridPath.length-1][0].X)/(gridSpacing/2)))-1;j++){
+									if((Math.round(endX-gridPath[gridPath.length-1][0].X)/gridSpacing)<0){
+										if(j>0){
+											points.push({X:(gridPath[gridPath.length-1][0].X+(j*gridSpacing*-1)),Y:gridPath[gridPath.length-1][0].Y})
+										}
+											points.push({X:(gridPath[gridPath.length-1][0].X+(j*gridSpacing*-1)-(gridSpacing/2)),Y:gridPath[gridPath.length-1][0].Y,N:"A"})
+										if(j>0){
+										}
+											lines[lines.length-1].push({X:(gridPath[gridPath.length-1][0].X+(j*(gridSpacing/2)*-1)-(gridSpacing/2)),Y:gridPath[gridPath.length-1][0].Y})
+
+									}
+									else{
+										if(j>0){
+											points.push({X:(gridPath[gridPath.length-1][0].X+(j*gridSpacing)),Y:gridPath[gridPath.length-1][0].Y})
+										}
+										points.push({X:(gridPath[gridPath.length-1][0].X+(j*gridSpacing)+(gridSpacing/2)),Y:gridPath[gridPath.length-1][0].Y,N:"A"})
+										if(j>0){
+										}
+											lines[lines.length-1].push({X:(gridPath[gridPath.length-1][0].X+(j*gridSpacing/2)+(gridSpacing/2)),Y:gridPath[gridPath.length-1][0].Y})
+
+									}
+								}
+								points.push({X:endX,Y:gridPath[gridPath.length-1][0].Y,N:"E"})
+								lines[lines.length-1].push({X:endX,Y:gridPath[gridPath.length-1][0].Y,N:"E"})
+						}
+						else{
+							gridPath[gridPath.length-1].push({X:gridPath[gridPath.length-1][0].X,Y:endY})
+							for(j=0;j<(Math.round(Math.abs(endY-gridPath[gridPath.length-1][0].Y)/(gridSpacing/2))-1);j++){
+									if((Math.round(endY-gridPath[gridPath.length-1][0].Y)/gridSpacing)<0){
+										if(j>0){
+											points.push({X:(gridPath[gridPath.length-1][0].X),Y:(gridPath[gridPath.length-1][0].Y+(j*gridSpacing*-1))})
+										}
+										points.push({X:(gridPath[gridPath.length-1][0].X),Y:(gridPath[gridPath.length-1][0].Y+(j*gridSpacing*-1)-(gridSpacing/2)),N:"A"})
+										if(j>0){
+										}
+											lines[lines.length-1].push({X:(gridPath[gridPath.length-1][0].X),Y:(gridPath[gridPath.length-1][0].Y+(j*(gridSpacing/2)*-1)-(gridSpacing/2))})
+
+										
+									}
+									else{
+										if(j>0){
+											points.push({X:(gridPath[gridPath.length-1][0].X),Y:(gridPath[gridPath.length-1][0].Y+(j*gridSpacing))})
+										}
+										points.push({X:(gridPath[gridPath.length-1][0].X),Y:(gridPath[gridPath.length-1][0].Y+(j*gridSpacing)+(gridSpacing/2)),N:"A"})
+									if(j>0){
+
+										}
+
+											lines[lines.length-1].push({X:(gridPath[gridPath.length-1][0].X),Y:(gridPath[gridPath.length-1][0].Y+(j*gridSpacing/2)+(gridSpacing/2))})
+
+									}
+	
+							}
+							points.push({X:gridPath[gridPath.length-1][0].X,Y:endY,N:"E"})
+							lines[lines.length-1].push({X:gridPath[gridPath.length-1][0].X,Y:endY})
+						}		
+						gridPath.push([])		
+
+						for(j=0;j<points.length;j++){							
+							for(k=0;k<points.length;k++){
+								if((Math.round(points[j].X)==Math.round(points[k].X))&&(Math.round(points[j].Y)==Math.round(points[k].Y)) ){
+									if(j!=k){
+										points[k]={X:parseFloat(points[j].X.toFixed(3)),Y:parseFloat(points[j].Y.toFixed(3)),N:true}
+									}
+								}
+							}
+						}
+
+						for(j=0;j<lines.length;j++){
+							for(k=0;k<lines[j].length;k++){
+								lines[j][k]={X:(parseFloat(lines[j][k].X.toFixed(3))),Y:(parseFloat(lines[j][k].Y.toFixed(3)))}
+							}
+						}
+
+						var temp2 = []
+						I=[]
+
+						for(j=0;j<lines.length;j++){
+							for(k=0;k<lines[j].length;k++){
+								for(l=0;l<lines.length;l++){
+									for(m=0;m<lines[l].length;m++){
+										if((l!=j)|| (m!=k)){
+										if((lines[j][k].X==lines[l][m].X)&&(lines[j][k].Y==lines[l][m].Y)){
+											lines[j][k].T="I"
+											lines[l][m].T="I"
+
+											I.push(lines[j][k])
+
+											if(lines[j][k+1]!=undefined){
+												lines[j][k+1].T="A"
+												temp2.push(lines[j][k+1])
+											}
+
+											if(lines[l][m+1]!=undefined){
+												lines[l][m+1].T="A"
+												temp2.push(lines[l][m+1])
+											}
+
+											if(lines[j][k-1]!=undefined){
+												lines[j][k-1].T="A"
+												temp2.push(lines[j][k-1])
+											}
+
+											if(lines[l][m-1]!=undefined){
+												lines[l][m-1].T="A"
+												temp2.push(lines[l][m-1])
+											}
+
+										}
+
+										}
+									}
+								}
+							}
+						}
+
+
+						for(j=0;j<I.length;j++){
+							for(k=0;k<I.length;k++){
+								if( ((I[j].X)==(I[k].X)) && ((I[j].Y)==(I[k].Y)) && (j!=k) ){
+									I.splice(k,1)
+									k--
+								}
+							}
+						}
+						for(j=0;j<temp2.length;j++){
+							for(k=0;k<temp2.length;k++){
+								if( ((temp2[j].X)==(temp2[k].X)) && ((temp2[j].Y)==(temp2[k].Y)) && (j!=k) ){
+									temp2.splice(k,1)
+									k--
+								}
+							}
+						}
+					
+						var temp = []
+						for(j=0;j<lines.length;j++){
+							temp.push([])
+							for(k=0;k<lines[j].length;k++){
+								if(lines[j][k].T=="I"){
+									temp.push([])
+								}
+								else{
+									temp[temp.length-1].push(lines[j][k])
+								}
+							}
+						}
+						
+						A = []
+						arcs = []
+
+						for(j=0;j<I.length;j++){						
+							for(k=0;k<temp2.length;k++){
+								if( (I[j].X==temp2[k].X) && (temp2[k].Y== (parseFloat(((I[j].Y)-(gridSpacing/2)).toFixed(3))))){
+								temp2[k].J=j
+									for(l=0;l<temp2.length;l++){
+										if( (I[j].Y==temp2[l].Y) && (temp2[l].X==(parseFloat(((I[j].X)+(gridSpacing/2)).toFixed(3)))) && (l!=k) ){
+											A.push([])
+											temp2[k].J=-1
+											temp2[l].J=-1
+											
+											arcs.push([])
+											for (v=0;v<=25;v++) {
+      										arcs[arcs.length-1].push({X:parseFloat(((temp2[k].X+gridSpacing/2)+Math.sin((-Math.PI/2)/25*v)*(gridSpacing/2)).toFixed(3)),Y:parseFloat(((temp2[k].Y)+Math.cos((-Math.PI/2)/25*v)*(gridSpacing/2)).toFixed(3))})
+											}
+
+											A[A.length-1].push({X:temp2[k].X,Y:temp2[k].Y,Cx:(temp2[k].X+gridSpacing/2),Cy:(temp2[k].Y),R1:(Math.PI/2),R2:(Math.PI)})
+											A[A.length-1].push(temp2[l])
+										}
+									}
+								}
+							}
+
+							for(k=0;k<temp2.length;k++){
+								if( (I[j].Y==temp2[k].Y) && (temp2[k].X==(parseFloat(((I[j].X)+(gridSpacing/2)).toFixed(3))))){
+								temp2[k].J=j
+									for(l=0;l<temp2.length;l++){
+										if( (I[j].X==temp2[l].X) && (temp2[l].Y==(parseFloat(((I[j].Y)+(gridSpacing/2)).toFixed(3)))) && (l!=k) ){
+											A.push([])
+											temp2[k].J=-1
+											temp2[l].J=-1
+
+											arcs.push([])
+											for (v=0;v<=25;v++) {
+      										arcs[arcs.length-1].push({X:parseFloat(((temp2[k].X)+Math.sin((Math.PI/2)/25*v+Math.PI)*(gridSpacing/2)).toFixed(3)),Y:parseFloat(((temp2[k].Y+gridSpacing/2)+Math.cos((Math.PI/2)/25*v+Math.PI)*(gridSpacing/2)).toFixed(3))})
+											}
+
+											A[A.length-1].push({X:temp2[k].X,Y:temp2[k].Y,Cx:(temp2[k].X),Cy:(temp2[k].Y+gridSpacing/2),R1:(0-Math.PI),R2:(0-Math.PI/2)})
+											A[A.length-1].push(temp2[l])
+										}
+									}
+								}
+							}
+
+							for(k=0;k<temp2.length;k++){
+								if( (I[j].X==temp2[k].X) && (temp2[k].Y==(parseFloat(((I[j].Y)+(gridSpacing/2)).toFixed(3))))){
+								temp2[k].J=j
+									for(l=0;l<temp2.length;l++){
+										if( (I[j].Y==temp2[l].Y) && (temp2[l].X==(parseFloat(((I[j].X)-(gridSpacing/2)).toFixed(3))) ) && (l!=k) ){
+											A.push([])
+											temp2[k].J=-1
+											temp2[l].J=-1
+
+											arcs.push([])
+											for (v=0;v<=25;v++) {
+      										arcs[arcs.length-1].push({X:parseFloat(((temp2[k].X-gridSpacing/2)+Math.sin((Math.PI/2)/25*v+Math.PI/2)*(gridSpacing/2)).toFixed(3)),Y:parseFloat(((temp2[k].Y)+Math.cos((Math.PI/2)/25*v+Math.PI/2)*(gridSpacing/2)).toFixed(3))})
+											}
+
+											A[A.length-1].push({X:temp2[k].X,Y:temp2[k].Y,Cx:(temp2[k].X-gridSpacing/2),Cy:(temp2[k].Y),R1:(0-Math.PI/2),R2:0})
+											A[A.length-1].push({X:temp2[l].X,Y:temp2[l].Y})
+
+										}
+									}
+								}
+							}
+
+							for(k=0;k<temp2.length;k++){
+								if( (I[j].Y==temp2[k].Y) && (temp2[k].X==(parseFloat(((I[j].X)-(gridSpacing/2)).toFixed(3))))){
+								temp2[k].J=j
+									for(l=0;l<temp2.length;l++){
+										if( (I[j].X==temp2[l].X) && (temp2[l].Y==(parseFloat(((I[j].Y)-(gridSpacing/2)).toFixed(3)))) && (l!=k) ){
+											A.push([])
+
+											arcs.push([])
+											for (v=0;v<=25;v++) {
+      										arcs[arcs.length-1].push({X:parseFloat(((temp2[k].X)+Math.sin((Math.PI/2)/25*v+0)*(gridSpacing/2)).toFixed(3)),Y:parseFloat(((temp2[k].Y-gridSpacing/2)+Math.cos((Math.PI/2)/25*v+0)*(gridSpacing/2)).toFixed(3))})
+											}
+												
+											temp2[k].J=-1
+											temp2[l].J=-1
+
+											A[A.length-1].push({X:temp2[k].X,Y:(temp2[k].Y),Cx:(temp2[k].X),Cy:(temp2[k].Y-gridSpacing/2),R1:(0),R2:(Math.PI/2)})
+											A[A.length-1].push(temp2[l])
+										}
+									}
+								}
+							}
+
+
+						}				
+
+						//console.log(arcs)
+						
+						var temp3 = []	
+
+	
+						for(j=0;j<temp2.length;j++){
+						
+						if(temp2[j].J>-1){
+							//temp2.splice(j,1)
+							//j--
+							temp3.push(temp2[j])
+						}
+	
+						}
+
+
+
+						points = temp	
+		
+						for(j=0;j<temp3.length;j++){
+							for(k=0;k<temp3.length;k++){
+	
+							if((k!=j) && (temp3[j].J==temp3[k].J)){
+
+								points.push([temp3[j],temp3[k]])
+								temp3.splice(j,1)
+								temp3.splice(k-1,1)
+								k=0
+								j=0
+
+							}	
+							}
+
+						}
+						
+						for(j=0;j<arcs.length;j++){
+								points.push(arcs[j])
+						}
+
+						var P = []
+						for(j=0;j<points.length;j++){
+							P.push(points[j])
+
+						}
+
+						var T = []
+
+						for(j=0;j<P.length;j++){
+							if(P[j].length==0){
+								P.splice(j,1)
+								j--
+							}
+						}
+		
+						//console.log(P)
+
+						T.push(P[0])
+						P.splice(0,1)
+						var test = true
+						//console.log(P)
+						while(P.length>0){
+
+
+						for(j=0;j<P.length;j++){
+							if((P[j].length>0) && (T[T.length-1][T[T.length-1].length-1].X==P[j][0].X) && (T[T.length-1][T[T.length-1].length-1].Y==P[j][0].Y)){		
+								for(k=0;k<P[j].length;k++){
+									T[T.length-1].push(P[j][k])
+								}
+								P.splice(j,1)
+								j=P.length								
+							}
+							else if((P[j].length>0) && (T[T.length-1][T[T.length-1].length-1].X==P[j][P[j].length-1].X) && (T[T.length-1][T[T.length-1].length-1].Y==P[j][P[j].length-1].Y)){		
+								for(k=P[j].length-1;k>=0;k--){
+									T[T.length-1].push(P[j][k])
+								}
+								P.splice(j,1)
+								j=P.length								
+							}
+							else if(j==P.length-1){
+								
+								T.push(P[0])
+								P.splice(0,1)
+							}
+
+						}
+
+						}
+
+						//console.log(T)
+						points = T
+						//draw()
+	
+					}
+
+					//remove duplicate points 
+					
+
+
+				paths=[]
+
+				for(j=0;j<arcs.length;j++){
+					if(arcs[j].length>1){
+						paths.push(arcs[j])
+
+					}
+				}
+				arcs = paths
+				paths=[]
+
+				}
+
+				}
+		}
+
+	}
+
+	draw()
+
+})
+
+$("#myCanvas").on('mousedown', function(e) {
+
+if(pan==true){
+	x = ((e.clientX-(10)-(xo)-(ctx.canvas.width/2))/sf)-panX
+	y = ((e.clientY-(10)-(yo)-(ctx.canvas.height/2))/sf)-panY
+
+	if(click==0){
+	px = x
+	py = y
+	click = 1
+	}
+}
+})
+
+$("#myCanvas").on('mouseup', function(e) {
+
+if(pan==true){
+
+	if(click==1){
+		click=0		
+	}
+
+	draw()
+}
+
+})
+
+function undo(){
+
+temp=[]
+pad=0
+
+console.log(net)
+
+$("#undo").blur()
+
+if(net.length>1){
+
+	if((seg==0)&&(net[net.length-1].length==0)){
+		net.pop()
+		if(net[net.length-1][0].T=="res"){
+			pkgOutlines.pop()
+			net[net.length-1].pop()
+		}
+		else{
+		net[net.length-1].pop()
+		}
+		trace.pop()
+		trace.pop()
+	}
+	
+	else if((net[net.length-1].length==0)&&(net[net.length-2].length==3)){
+		pkgOutlines.pop()
+		net.pop()
+		net[net.length-1].pop()
+		net[net.length-1].pop()
+		trace.pop()
+		trace.pop()
+		seg=0
+	
+	}
+	
+	else{
+
+		net[net.length-1].pop()
+		trace.pop()
+	}
+	if((net[net.length-1].length==0)){
+		endX=(net[net.length-2][net[net.length-2].length-1].X)
+		endY=(net[net.length-2][net[net.length-2].length-1].Y)
+	}
+	else{
+		endX=(net[net.length-1][net[net.length-1].length-1].X)
+		endY=(net[net.length-1][net[net.length-1].length-1].Y)
+		mouseX=endX
+		mouseY=endY
+	}
+}
+else{
+	trace.pop()
+	net = [[]]
+	seg = 1
+}
+
+if(seg==0){
+	seg=1
+}
+else{
+	seg=0
+}
+if((net[net.length-1].length==1)&&((net[net.length-1][0].T=="res"))){
+	net[net.length-1].pop()
+	seg=0
+}
+
+}
+
+$("#myCanvas").on('mousemove', function(e) {
+
+mouseX=((e.clientX-(10)-(xo)-(ctx.canvas.width/2))/sf)-panX
+mouseY=((e.clientY-(10)-(yo)-(ctx.canvas.height/2))/sf)-panY
+	
+if(pan==false){
+	for(i=0;i<pts.length;i++){
+		if(((Math.abs(mouseX-pts[i].X))<=(gridSpacing/2)) && ((Math.abs(mouseY-pts[i].Y))<=(gridSpacing/2))){
+			mouseX=pts[i].X
+			mouseY=pts[i].Y
+			pinNum=pts[i].PIN
+
+			line = true
+			on_grid=true
+		 	i=pts.length
+		}
+		else{
+			on_grid=false
+			line = false
+		}
+	}
+
+}
+
+else if((pan==true)&&(click==1)){
+		x=((e.clientX-(10)-(xo)-(ctx.canvas.width/2))/sf)
+		y=((e.clientY-(10)-(yo)-(ctx.canvas.height/2))/sf)
+		panX=(x-px)
+		panY=(y-py)
+}
+
+draw()
+
+})
+
+
+$(document).keypress(function(e){
+	if(e.which===32){		
+			if(pan==false){
+				pan=true
+			}
+			else{
+				pan=false
+			}
+			draw()
+	}
+})
+
+$(document).keydown(function(e){
+
+	if(e.which === 90 && e.ctrlKey){
+		undo() 
+	}
+	else if(e.which === 90){
+		zoom = 0
+		panX = 0
+		panY = 0 
+	}
+
+	else if(e.which === 67){
+		//clear all
+		document.getElementById("y-top").value=0
+		document.getElementById("y-bot").value=0
+		document.getElementById("x-left").value=0
+		document.getElementById("x-right").value=0
+
+		I=[]
+		A=[]
+		lines = []
+		arcs = []
+		points = []
+		gridPath=[[]]
+		zoom = 0
+		panX = 0
+		panY = 0
+		makeFrame(radius)
+		makeGrid()
+		
+	}
+	else if(e.which === 72){
+		help()
+	}
+	draw()
+          
+})
+
+
+function Clear(){
+		I=[]
+		A=[]
+		lines = []
+		arcs = []
+		gridPath=[[]]
+		points = []
+		zoom = 0
+		panX = 0
+		panY = 0
+		draw()
+}
+
+function makeFrame(radius) {
+
+var fo = 0
+
+frame1=[]
+path1=[]
+
+for (i=0;i<=verts;i++) {
+   if(i<=25){
+      frame1.push({X:((xmax+fo-radius)+Math.sin((Math.PI*2)/verts*i)*radius),Y:((ymax+fo-radius)+Math.cos((Math.PI*2)/verts*i)*radius)})
+      
+      path1.push({X:((xmax-radius)+Math.sin((Math.PI*2)/verts*i)*(radius+tool)),Y:((ymax-radius)+Math.cos((Math.PI*2)/verts*i)*(radius+tool))})
+   }
+   else if((i>25)&&(i<=50)){
+      frame1.push({X:((xmax+fo-radius)+Math.sin((Math.PI*2)/verts*i)*radius),Y:((ymin-fo+radius)+Math.cos((Math.PI*2)/verts*i)*radius)})
+      
+      path1.push({X:((xmax-radius)+Math.sin((Math.PI*2)/verts*i)*(radius+tool)),Y:((ymin+radius)+Math.cos((Math.PI*2)/verts*i)*(radius+tool))}) 
+   }
+   else if((i>50)&&(i<=75)){
+      frame1.push({X:((xmin-fo+radius)+Math.sin((Math.PI*2)/verts*i)*radius),Y:((ymin-fo+radius)+Math.cos((Math.PI*2)/verts*i)*radius)})
+      
+      path1.push({X:((xmin+radius)+Math.sin((Math.PI*2)/verts*i)*(radius+tool)),Y:((ymin+radius)+Math.cos((Math.PI*2)/verts*i)*(radius+tool))})     
+   }
+   else if((i>75)&&(i<=100)){
+      frame1.push({X:((xmin-fo+radius)+Math.sin((Math.PI*2)/verts*i)*radius),Y:((ymax+fo-radius)+Math.cos((Math.PI*2)/verts*i)*radius)})
+      
+      path1.push({X:((xmin+radius)+Math.sin((Math.PI*2)/verts*i)*(radius+tool)),Y:((ymax-radius)+Math.cos((Math.PI*2)/verts*i)*(radius+tool))})  
+           
+      if(i==100){
+      	frame1.push(frame1[0])
+      	path1.push(path1[0])
+      }      
+   }   
+}
+
+if(radius==0){
+	frame1=[]
+	frame1.push({X:xmax,Y:ymax})
+	frame1.push({X:xmax,Y:ymin})
+	frame1.push({X:xmin,Y:ymin})
+	frame1.push({X:xmin,Y:ymax})
+	frame1.push({X:xmax,Y:ymax})
+}
+
+else if(radius+tool<=0){
+	path1=[]
+	path1.push({X:-xmax-tool,Y:-ymax-tool})
+	path1.push({X:-xmax-tool,Y:-ymin+tool})
+	path1.push({X:-xmin+tool,Y:-ymin+tool})
+	path1.push({X:-xmin+tool,Y:-ymax-tool})
+	path1.push({X:-xmax-tool,Y:-ymax-tool})
+}
+	frame1.reverse()
+
+	draw()
+}
+
+
+
+function makeGrid(){
+	pts = []
+	grid = []
+
+
+	if(document.getElementById("board").value=="maze"){
+	
+		for(i=0;i<(Math.round(((Math.abs(ymin))+ymax+10)/gridSpacing));i++){
+			for(j=0;j<(Math.round(((Math.abs(xmin))+xmax+10)/gridSpacing));j++){
+				pts.push({X:(xmin+(j*gridSpacing)),Y:(ymax-(i*gridSpacing))})
+			}
+		}
+
+	for(i=0;i<(Math.round(((Math.abs(ymin))+ymax)/gridSpacing));i++){
+		grid.push([{X:xmin,Y:(ymax-(i*gridSpacing))},{X:xmax,Y:(ymax-(i*gridSpacing))}])
+	}
+
+	for(i=0;i<(Math.round(((Math.abs(xmin))+xmax)/gridSpacing));i++){
+		grid.push([{X:(xmin+(i*gridSpacing)),Y:(ymax)},{X:(xmin+(i*gridSpacing)),Y:(ymin)}])
+	}
+		
+
+	}
+	draw()
+}
+
+$(window).resize(function(){
+	draw()
+})
+
+
+
+function make(){
+
+var material = {feed:500,plunge:300}
+var pass_depth = 0.425
+var filetype = "sbp"
+
+g=""
+
+
+flip()
+
+if(filetype=="gcode"){
+
+
+}
+
+else if(filetype=="sbp"){
+
+pass_depth = 0.05
+
+g+="MS," + (0.5) + "," + (0.3) + "\n"
+g+="JZ,0.2\n"
+g+="SO,1,1\n"
+g+="PAUSE 1\n"   
+
+g+="JZ,0.1\n"	
+
+	for(i=0;i<points.length;i++){
+		if(points[i].length>0){
+			g+="J2,"+((points[i][0].X+Math.abs(xmin))/25.4).toFixed(4)+","+ ((points[i][0].Y+ymax)/25.4).toFixed(4) + "\n"
+	   	g+="MZ,-"+ (0.14) + "\n"
+			for(j=0;j<points[i].length;j++){
+				g+="M2,"+((points[i][j].X+Math.abs(xmin))/25.4).toFixed(4)+","+ ((points[i][j].Y+ymax)/25.4).toFixed(4) + "\n"
+			}
+			g+="JZ,0.1\n"
+		}
+	}
+
+	for(i=0;i<points.length;i++){
+		if(points[i].length>0){
+			g+="J2,"+((points[i][0].X+Math.abs(xmin))/25.4).toFixed(4)+","+ ((points[i][0].Y+ymax)/25.4).toFixed(4) + "\n"
+	   	g+="MZ,-"+ (0.15) + "\n"
+			for(j=0;j<points[i].length;j++){
+				g+="M2,"+((points[i][j].X+Math.abs(xmin))/25.4).toFixed(4)+","+ ((points[i][j].Y+ymax)/25.4).toFixed(4) + "\n"
+			}
+			g+="JZ,0.1\n"
+		}
+	}
+
+g+="JZ,0.2\n"
+g+="SO,1,0\n"
+g+="J3,0,0,0.4\n"
+
+fabmo.submitJob({
+   file : g,
+   filename : 'maze.sbp',
+   name : "maze",
+	description : (((xmax+Math.abs(xmin))/25.4).toFixed(2)) + " x " + (((ymax+Math.abs(ymin))/25.4).toFixed(2)) + "\" " + "(1/4\" tool)"  
+});
+
+}
+
+	g=""
+
+	flip()
+
+}
+
+function flip(){
+
+   for(i=0;i<points.length;i++){
+		for(j=0;j<points[i].length;j++){
+			if(points[i][j].Y<0){
+				points[i][j].Y=Math.abs(points[i][j].Y)
+			}
+			else{
+				points[i][j].Y=(0-points[i][j].Y)	
+			}
+		}
+	}
+
+}
+
+</script>
+
+</body>
+</html>
+
