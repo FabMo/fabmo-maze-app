@@ -277,12 +277,13 @@ var temp2
 var A = []
 
 $("#myCanvas").on('mousewheel',function(e){
+	e.preventDefault()
 	zoom = parseFloat((zoom+(e.deltaY)).toFixed(3))
 	draw()
-	e.preventDefault()
 })
 
 $("#myCanvas").on("touchmove", function(e){
+	e.preventDefault()
 
 	if (e.originalEvent.touches.length==1) {
 		if(click==0){	
@@ -364,12 +365,12 @@ ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height)
 ctx.lineJoin="round"
 ctx.lineCap="round"
 
-ctx.fillStyle="#8c8cff"
+ctx.fillStyle="#bbbbff"
 ctx.strokeStyle="#000"
 ctx.lineWidth="1"
 
 
-ctx.fillStyle="rgba(76, 175, 200, 0.5)"
+//ctx.fillStyle="rgba(76, 175, 200, 0.5)"
 ctx.beginPath()
 	for(i=0;i<frame1.length;i++){
 		ctx.lineTo((frame1[i].X*sf)+ctx.canvas.width/2,(frame1[i].Y*sf)+ctx.canvas.height/2)
@@ -415,17 +416,26 @@ ctx.stroke()
 
 
 
-ctx.lineWidth=sf*3.175
-ctx.strokeStyle="#5500dd"
+
 
 for(i=0;i<points.length;i++){
 	ctx.beginPath()
+	ctx.lineWidth=sf*3.175
+	ctx.strokeStyle="#fff"
 	for(j=0;j<points[i].length;j++){
 		ctx.lineTo((ctx.canvas.width/2+(points[i][j].X*sf)),(ctx.canvas.height/2+(points[i][j].Y*sf)))				
 	}
-ctx.stroke()
+	ctx.stroke()
 }
-
+for(i=0;i<points.length;i++){
+	ctx.beginPath()
+	ctx.lineWidth=sf*0.5
+	ctx.strokeStyle="#666"
+	for(j=0;j<points[i].length;j++){
+		ctx.lineTo((ctx.canvas.width/2+(points[i][j].X*sf)),(ctx.canvas.height/2+(points[i][j].Y*sf)))				
+	}
+	ctx.stroke()
+}
 
 ctx.lineWidth=0.8*sf
 
@@ -442,13 +452,13 @@ ctx.beginPath()
 
 	ctx.fillStyle="#666"
 
-	ctx.arc(	(ctx.canvas.width/2+(mouseX)*sf),(ctx.canvas.height/2+(mouseY)*sf),2.5*sf,0,(Math.PI*2) )
+	ctx.arc(	(ctx.canvas.width/2+(mouseX)*sf),(ctx.canvas.height/2+(mouseY)*sf),2.2*sf,0,(Math.PI*2) )
 	
 	if(gridPath[gridPath.length-1].length==0){
-		ctx.fillStyle="#fff000"
+		ctx.fillStyle="#33ff00"
 	}
 	else{
-		ctx.fillStyle="#ff00ff"
+		ctx.fillStyle="#ff3300"
 	}
 
 	ctx.stroke()
