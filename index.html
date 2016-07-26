@@ -497,7 +497,7 @@ ctx.beginPath()
 for(i=0;i<I.length;i++){
 	ctx.beginPath()
 	ctx.fillStyle="#666"
-	ctx.arc(	(ctx.canvas.width/2+(I[i].X)*sf),(ctx.canvas.height/2+(I[i].Y)*sf),sf*0.5,0,(Math.PI*2) )				
+	//ctx.arc(	(ctx.canvas.width/2+(I[i].X)*sf),(ctx.canvas.height/2+(I[i].Y)*sf),sf*0.5,0,(Math.PI*2) )				
 	ctx.fill()
 }
 
@@ -825,7 +825,7 @@ $("#myCanvas").on('click', function(e) {
 							for(k=0;k<temp3.length;k++){
 	
 							if((k!=j) && (temp3[j].J==temp3[k].J)){
-								//points.push([temp3[j],temp3[k]])
+								points.push([temp3[j],temp3[k]])
 								temp3.splice(j,1)
 								temp3.splice(k-1,1)
 								k=0
@@ -1204,13 +1204,18 @@ function makeGrid(){
 		}
 
 	for(i=0;i<(Math.round(((Math.abs(ymin))+ymax)/gridSpacing));i++){
-		grid.push([{X:xmin,Y:(ymax-(i*gridSpacing))},{X:xmax,Y:(ymax-(i*gridSpacing))}])
+		grid.push([{X:xmin+12.7,Y:(ymax-(i*gridSpacing))},{X:xmax-12.7,Y:(ymax-(i*gridSpacing))}])
 	}
 
 	for(i=0;i<(Math.round(((Math.abs(xmin))+xmax)/gridSpacing));i++){
-		grid.push([{X:(xmin+(i*gridSpacing)),Y:(ymax)},{X:(xmin+(i*gridSpacing)),Y:(ymin)}])
+		grid.push([{X:(xmin+(i*gridSpacing)),Y:(ymax)-12.7},{X:(xmin+(i*gridSpacing)),Y:(ymin)+12.7}])
 	}
-		
+
+
+	grid.push([{X:xmin,Y:0},{X:xmin+12.7,Y:0}])
+	grid.push([{X:xmax,Y:0},{X:xmax-12.7,Y:0}])
+	grid.push([{X:0,Y:ymax},{X:0,Y:ymax-12.7}])
+	grid.push([{X:0,Y:ymin},{X:0,Y:ymin+12.7}])		
 
 	}
 	draw()
