@@ -437,6 +437,33 @@ for(i=0;i<points.length;i++){
 	ctx.stroke()
 }
 
+
+	ctx.lineWidth=0.4*sf
+	ctx.strokeStyle="#666"
+	ctx.fillStyle="#fff000"
+
+	ctx.beginPath()
+	ctx.arc(	(ctx.canvas.width/2),ctx.canvas.height/2+76.2*sf,sf*2.5,0,(Math.PI*2) )				
+	ctx.fill()
+	ctx.stroke()
+
+	ctx.beginPath()
+	ctx.arc(	(ctx.canvas.width/2),ctx.canvas.height/2-76.2*sf,sf*2.5,0,(Math.PI*2) )				
+	ctx.fill()
+	ctx.stroke()
+
+	ctx.beginPath()
+	ctx.arc(	(ctx.canvas.width/2-76.2*sf),ctx.canvas.height/2,sf*2.5,0,(Math.PI*2) )				
+	ctx.fill()
+	ctx.stroke()
+
+	ctx.beginPath()
+	ctx.arc(	(ctx.canvas.width/2+76.2*sf),ctx.canvas.height/2,sf*2.5,0,(Math.PI*2) )				
+	ctx.fill()
+	ctx.stroke()
+
+
+
 ctx.lineWidth=0.8*sf
 
 
@@ -460,14 +487,21 @@ ctx.beginPath()
 	else{
 		ctx.fillStyle="#ff3300"
 	}
-
 	ctx.stroke()
-
 	ctx.lineWidth=sf
-
 	ctx.fill()
 
 }
+
+
+for(i=0;i<I.length;i++){
+	ctx.beginPath()
+	ctx.fillStyle="#666"
+	ctx.arc(	(ctx.canvas.width/2+(I[i].X)*sf),(ctx.canvas.height/2+(I[i].Y)*sf),sf*0.5,0,(Math.PI*2) )				
+	ctx.fill()
+}
+
+
 
 
 ctx.strokeStyle="#8800ff"
@@ -552,7 +586,6 @@ $("#myCanvas").on('click', function(e) {
 										if(j>0){
 										}
 											lines[lines.length-1].push({X:(gridPath[gridPath.length-1][0].X+(j*gridSpacing/2)+(gridSpacing/2)),Y:gridPath[gridPath.length-1][0].Y})
-
 									}
 								}
 								points.push({X:endX,Y:gridPath[gridPath.length-1][0].Y,N:"E"})
@@ -611,6 +644,8 @@ $("#myCanvas").on('click', function(e) {
 						I=[]
 
 						for(j=0;j<lines.length;j++){
+							//I.push(lines[j][0])
+							//I.push(lines[j][lines[j].length-1])
 							for(k=0;k<lines[j].length;k++){
 								for(l=0;l<lines.length;l++){
 									for(m=0;m<lines[l].length;m++){
@@ -773,22 +808,16 @@ $("#myCanvas").on('click', function(e) {
 
 						}				
 
-						//console.log(arcs)
+
 						
 						var temp3 = []	
 
 	
 						for(j=0;j<temp2.length;j++){
-						
-						if(temp2[j].J>-1){
-							//temp2.splice(j,1)
-							//j--
-							temp3.push(temp2[j])
+							if(temp2[j].J>-1){
+								temp3.push(temp2[j])
+							}
 						}
-	
-						}
-
-
 
 						points = temp	
 		
@@ -796,8 +825,7 @@ $("#myCanvas").on('click', function(e) {
 							for(k=0;k<temp3.length;k++){
 	
 							if((k!=j) && (temp3[j].J==temp3[k].J)){
-
-								points.push([temp3[j],temp3[k]])
+								//points.push([temp3[j],temp3[k]])
 								temp3.splice(j,1)
 								temp3.splice(k-1,1)
 								k=0
@@ -1158,7 +1186,20 @@ function makeGrid(){
 	
 		for(i=0;i<(Math.round(((Math.abs(ymin))+ymax+10)/gridSpacing));i++){
 			for(j=0;j<(Math.round(((Math.abs(xmin))+xmax+10)/gridSpacing));j++){
-				pts.push({X:(xmin+(j*gridSpacing)),Y:(ymax-(i*gridSpacing))})
+				if((j==6) && ((i==0)||(i==12))){
+					pts.push({X:(xmin+(j*gridSpacing)),Y:(ymax-(i*gridSpacing))})
+				}
+				else if((i>0)&&(i<12)){
+				
+				if(i==6){
+					pts.push({X:(xmin+(j*gridSpacing)),Y:(ymax-(i*gridSpacing))})			
+				}
+				else if((i!=6)&&(j>0)&&(j<12)){
+					pts.push({X:(xmin+(j*gridSpacing)),Y:(ymax-(i*gridSpacing))})
+				}
+
+				}
+
 			}
 		}
 
